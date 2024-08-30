@@ -657,4 +657,206 @@ bool IntegrationTestValidator::hasValidProgression(const std::vector<double>& va
     return progression_ratio >= 0.6;
 }
 
+// IntegrationTestDataGenerator Implementation
+
+Team IntegrationTestDataGenerator::generateRandomTeam(const std::string& team_name, int team_size) {
+    std::vector<Pokemon> team_members;
+    
+    std::vector<std::vector<std::string>> type_combinations = {
+        {"fire"}, {"water"}, {"grass"}, {"electric"}, {"psychic"}, {"fighting"},
+        {"rock"}, {"ground"}, {"flying"}, {"bug"}, {"poison"}, {"ghost"},
+        {"ice"}, {"dragon"}, {"dark"}, {"steel"}, {"fairy"}, {"normal"},
+        {"fire", "flying"}, {"water", "ice"}, {"grass", "poison"}, {"electric", "steel"},
+        {"psychic", "fairy"}, {"fighting", "steel"}, {"rock", "ground"}, {"dragon", "flying"}
+    };
+    
+    std::uniform_int_distribution<size_t> type_dist(0, type_combinations.size() - 1);
+    
+    for (int i = 0; i < team_size; ++i) {
+        std::string pokemon_name = team_name + "_Member" + std::to_string(i + 1);
+        auto types = type_combinations[type_dist(rng_)];
+        
+        Pokemon random_pokemon = generateRandomPokemon(pokemon_name, types);
+        team_members.push_back(random_pokemon);
+    }
+    
+    return TestUtils::createTestTeam(team_members);
+}
+
+Team IntegrationTestDataGenerator::generateGymTeam(const std::string& type, int team_size) {
+    std::vector<Pokemon> gym_team;
+    
+    for (int i = 0; i < team_size; ++i) {
+        std::string pokemon_name = type + "Gym_Pokemon" + std::to_string(i + 1);
+        
+        // Gym Pokemon should be type-specialized
+        std::vector<std::string> types = {type};
+        if (i == team_size - 1) {  // Leader's ace gets dual type
+            std::vector<std::string> secondary_types = {"normal", "flying", "steel"};
+            std::uniform_int_distribution<size_t> sec_dist(0, secondary_types.size() - 1);
+            types.push_back(secondary_types[sec_dist(rng_)]);
+        }
+        
+        Pokemon gym_pokemon = generateRandomPokemon(pokemon_name, types, 70, 120);
+        
+        // Replace some moves with type-specific ones
+        gym_pokemon.moves.clear();
+        gym_pokemon.moves.push_back(TestUtils::createTestMove(type + "-signature", 85, 95, 10, type, "special"));
+        gym_pokemon.moves.push_back(TestUtils::createTestMove(type + "-move", 70, 100, 15, type, "physical"));
+        gym_pokemon.moves.push_back(TestUtils::createTestMove("double-team", 0, 100, 15, "normal", "status"));
+        gym_pokemon.moves.push_back(TestUtils::createTestMove("protect", 0, 100, 10, "normal", "status"));
+        
+        gym_team.push_back(gym_pokemon);
+    }
+    
+    return TestUtils::createTestTeam(gym_team);
+}
+
+Team IntegrationTestDataGenerator::generateEliteFourTeam(const std::string& specialization, int team_size) {
+    std::vector<Pokemon> elite_team;
+    
+    // Elite Four teams are more powerful and specialized
+    std::vector<std::string> base_types;
+    if (specialization == "ice") base_types = {"ice", "water"};
+    else if (specialization == "fighting") base_types = {"fighting", "rock"};
+    else if (specialization == "ghost") base_types = {"ghost", "poison"};
+    else if (specialization == "dragon") base_types = {"dragon", "flying"};
+    else base_types = {specialization};
+    
+    for (int i = 0; i < team_size; ++i) {
+        std::string pokemon_name = "Elite" + specialization + "_Pokemon" + std::to_string(i + 1);
+        
+        std::vector<std::string> types = {base_types[i % base_types.size()]};
+        if (i == team_size - 1) {  // Elite Four ace gets specialization type
+            types = {specialization, base_types[0]};
+        }
+        
+        Pokemon elite_pokemon = generateRandomPokemon(pokemon_name, types, 90, 150);
+        
+        // Elite Four Pokemon have powerful movesets
+        elite_pokemon.moves.clear();
+        elite_pokemon.moves.push_back(TestUtils::createTestMove(specialization + "-ultimate", 110, 85, 5, specialization, "special"));
+        elite_pokemon.moves.push_back(TestUtils::createTestMove(specialization + "-blast", 90, 100, 10, specialization, "special"));
+        elite_pokemon.moves.push_back(TestUtils::createTestMove("recover", 0, 100, 5, "normal", "status"));
+        elite_pokemon.moves.push_back(TestUtils::createTestMove("calm-mind", 0, 100, 20, "psychic", "status"));
+        
+        elite_team.push_back(elite_pokemon);
+    }
+    
+    return TestUtils::createTestTeam(elite_team);
+}
+
+Team IntegrationTestDataGenerator::generateChampionTeam(int team_size) {
+    std::vector<Pokemon> champion_team;
+    
+    // Champion has the most diverse and powerful team
+    std::vector<std::vector<std::string>> champion_types = {
+        {"dragon", "flying"}, {"psychic", "steel"}, {"fire", "dark"}, 
+        {"water", "fairy"}, {"electric", "flying"}, {"grass", "poison"}
+    };
+    
+    for (int i = 0; i < team_size; ++i) {
+        std::string pokemon_name = "Champion_Legendary" + std::to_string(i + 1);
+        
+        auto types = champion_types[i % champion_types.size()];
+        Pokemon champion_pokemon = generateRandomPokemon(pokemon_name, types, 110, 170);
+        
+        // Champion Pokemon have legendary movesets
+        champion_pokemon.moves.clear();
+        champion_pokemon.moves.push_back(TestUtils::createTestMove("champion-signature", 130, 90, 5, types[0], "special"));
+        champion_pokemon.moves.push_back(TestUtils::createTestMove("legendary-power", 100, 100, 8, types[1], "special"));
+        champion_pokemon.moves.push_back(TestUtils::createTestMove("recover", 0, 100, 5, "normal", "status"));
+        champion_pokemon.moves.push_back(TestUtils::createTestMove("dragon-dance", 0, 100, 20, "dragon", "status"));
+        
+        champion_team.push_back(champion_pokemon);
+    }
+    
+    return TestUtils::createTestTeam(champion_team);
+}
+
+std::vector<std::pair<Team, Battle::AIDifficulty>> IntegrationTestDataGenerator::generateTournamentSequence() {
+    std::vector<std::pair<Team, Battle::AIDifficulty>> sequence;
+    
+    // 8 Gyms with progressive difficulty
+    std::vector<std::string> gym_types = {"rock", "water", "electric", "grass", "poison", "psychic", "fire", "ground"};
+    std::vector<Battle::AIDifficulty> gym_difficulties = {
+        Battle::AIDifficulty::EASY, Battle::AIDifficulty::EASY,       // Gyms 1-2
+        Battle::AIDifficulty::MEDIUM, Battle::AIDifficulty::MEDIUM, Battle::AIDifficulty::MEDIUM,  // Gyms 3-5
+        Battle::AIDifficulty::HARD, Battle::AIDifficulty::HARD, Battle::AIDifficulty::HARD    // Gyms 6-8
+    };
+    
+    for (size_t i = 0; i < gym_types.size(); ++i) {
+        Team gym_team = generateGymTeam(gym_types[i], 2);
+        sequence.emplace_back(gym_team, gym_difficulties[i]);
+    }
+    
+    // 4 Elite Four members - all Expert difficulty
+    std::vector<std::string> elite_specializations = {"ice", "fighting", "ghost", "dragon"};
+    for (const auto& spec : elite_specializations) {
+        Team elite_team = generateEliteFourTeam(spec, 3);
+        sequence.emplace_back(elite_team, Battle::AIDifficulty::EXPERT);
+    }
+    
+    // Champion - Expert difficulty
+    Team champion_team = generateChampionTeam(4);
+    sequence.emplace_back(champion_team, Battle::AIDifficulty::EXPERT);
+    
+    return sequence;
+}
+
+Pokemon IntegrationTestDataGenerator::generateRandomPokemon(
+    const std::string& name_prefix, 
+    const std::vector<std::string>& types,
+    int min_stat, int max_stat) {
+    
+    std::uniform_int_distribution<int> stat_dist(min_stat, max_stat);
+    
+    int hp = stat_dist(rng_);
+    int attack = stat_dist(rng_);
+    int defense = stat_dist(rng_);
+    int special_attack = stat_dist(rng_);
+    int special_defense = stat_dist(rng_);
+    int speed = stat_dist(rng_);
+    
+    Pokemon random_pokemon = TestUtils::createTestPokemon(
+        name_prefix, hp, attack, defense, special_attack, special_defense, speed, types
+    );
+    
+    // Generate random moveset
+    random_pokemon.moves.clear();
+    
+    // Create distributions for move stats
+    std::uniform_int_distribution<int> power_dist(60, 90);
+    std::uniform_int_distribution<int> accuracy_dist(85, 100);
+    std::uniform_int_distribution<int> pp_dist(10, 20);
+    
+    // Add type-based moves
+    for (const auto& type : types) {
+        random_pokemon.moves.push_back(TestUtils::createTestMove(
+            type + "-attack", 
+            power_dist(rng_),  // Power
+            accuracy_dist(rng_), // Accuracy
+            pp_dist(rng_),  // PP
+            type, 
+            "special"
+        ));
+    }
+    
+    // Fill remaining slots with generic moves
+    while (random_pokemon.moves.size() < 4) {
+        std::vector<std::pair<std::string, std::string>> generic_moves = {
+            {"tackle", "normal"}, {"double-team", "normal"}, {"rest", "psychic"}, {"protect", "normal"}
+        };
+        
+        std::uniform_int_distribution<size_t> move_dist(0, generic_moves.size() - 1);
+        auto [move_name, move_type] = generic_moves[move_dist(rng_)];
+        
+        random_pokemon.moves.push_back(TestUtils::createTestMove(
+            move_name, 70, 100, 15, move_type, "physical"
+        ));
+    }
+    
+    return random_pokemon;
+}
+
 } // namespace IntegrationTestUtils

@@ -128,6 +128,12 @@ create_integration_test(test_championship_system_integration integration/test_ch
 create_integration_test(test_team_state_persistence_integration integration/test_team_state_persistence_integration.cpp)
 
 # ────────────────────────────────
+#  Phase 3 Commit 2/3: End-to-End Gameplay Flow Tests
+# ────────────────────────────────
+create_integration_test(test_end_to_end_gameplay_flows integration/test_end_to_end_gameplay_flows.cpp)
+create_integration_test(test_tournament_progression_scenarios integration/test_tournament_progression_scenarios.cpp)
+
+# ────────────────────────────────
 #  Convenience aggregate target
 # ────────────────────────────────
 add_custom_target(run_all_tests
@@ -158,6 +164,8 @@ add_custom_target(run_all_tests
         test_tournament_ai_integration
         test_championship_system_integration
         test_team_state_persistence_integration
+        test_end_to_end_gameplay_flows
+        test_tournament_progression_scenarios
         test_battle_regression
         test_ai_regression
         test_data_regression
@@ -169,11 +177,24 @@ add_custom_target(run_all_tests
 #  Phase 3 Integration Test Target
 # ────────────────────────────────
 add_custom_target(run_phase3_integration_tests
-    COMMAND ${CMAKE_CTEST_COMMAND} --verbose -R "test_tournament_.*_integration|test_championship_.*_integration|test_team_state_.*_integration"
+    COMMAND ${CMAKE_CTEST_COMMAND} --verbose -R "test_tournament_.*_integration|test_championship_.*_integration|test_team_state_.*_integration|test_end_to_end_.*|test_tournament_progression_.*"
     DEPENDS
         test_tournament_battle_integration
         test_tournament_ai_integration
         test_championship_system_integration
         test_team_state_persistence_integration
+        test_end_to_end_gameplay_flows
+        test_tournament_progression_scenarios
     COMMENT "Running Phase 3 Multi-System Integration Tests"
+)
+
+# ────────────────────────────────
+#  Phase 3 End-to-End Test Target
+# ────────────────────────────────
+add_custom_target(run_end_to_end_tests
+    COMMAND ${CMAKE_CTEST_COMMAND} --verbose -R "test_end_to_end_.*|test_tournament_progression_.*"
+    DEPENDS
+        test_end_to_end_gameplay_flows
+        test_tournament_progression_scenarios
+    COMMENT "Running Phase 3 End-to-End Gameplay Flow Tests"
 )

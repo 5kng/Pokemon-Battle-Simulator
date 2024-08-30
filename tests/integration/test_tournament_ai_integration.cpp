@@ -296,7 +296,7 @@ TEST_F(TournamentAIIntegrationTest, GymLeaderAIBehaviorConsistency) {
     testBattleState.opponentPokemon = player_team.getPokemon(0);
     testBattleState.aiTeam = &early_gym_team;
     testBattleState.opponentTeam = &player_team;
-    testBattleState.currentWeather = WeatherCondition::CLEAR;
+    testBattleState.currentWeather = WeatherCondition::NONE;
     testBattleState.weatherTurnsRemaining = 0;
     testBattleState.turnNumber = 1;
     
@@ -355,6 +355,9 @@ TEST_F(TournamentAIIntegrationTest, GymLeaderAIBehaviorConsistency) {
                 break;
             }
         }
+        
+        // Suppress unused variable warning if needed
+        (void)consideredSwitching;
         // Hard AI should at least consider switching (even if it doesn't always switch)
         EXPECT_TRUE(hardPattern.switch_decisions.size() > 0);
     }
@@ -445,7 +448,7 @@ TEST_F(TournamentAIIntegrationTest, AIStrategyEffectivenessInTournamentContext) 
     standardBattleState.opponentPokemon = player_team.getPokemon(0);
     standardBattleState.aiTeam = &early_gym_team;
     standardBattleState.opponentTeam = &player_team;
-    standardBattleState.currentWeather = WeatherCondition::CLEAR;
+    standardBattleState.currentWeather = WeatherCondition::NONE;
     standardBattleState.weatherTurnsRemaining = 0;
     standardBattleState.turnNumber = 1;
     
@@ -584,7 +587,7 @@ TEST_F(TournamentAIIntegrationTest, AIDifficultyScalingWithTournamentStages) {
         stageBattleState.opponentPokemon = player_team.getPokemon(0);
         stageBattleState.aiTeam = stageTeam;
         stageBattleState.opponentTeam = &player_team;
-        stageBattleState.currentWeather = WeatherCondition::CLEAR;
+        stageBattleState.currentWeather = WeatherCondition::NONE;
         stageBattleState.weatherTurnsRemaining = 0;
         stageBattleState.turnNumber = 1;
         
@@ -606,6 +609,7 @@ TEST_F(TournamentAIIntegrationTest, AIIntegrationWithTournamentBattleEvents) {
     
     // Get event manager for tracking
     auto& eventManager = tournamentBattle.getEventManager();
+    (void)eventManager; // Suppress unused variable warning
     
     // Verify event system is functional
     EXPECT_FALSE(tournamentBattle.isBattleOver());
@@ -621,7 +625,7 @@ TEST_F(TournamentAIIntegrationTest, AIIntegrationWithTournamentBattleEvents) {
     ASSERT_TRUE(playerPokemon != nullptr);
     
     // Test that AI can handle status effects in tournament context
-    aiPokemon->setStatusCondition(StatusCondition::POISON);
+    aiPokemon->applyStatusCondition(StatusCondition::POISON);
     
     // Create AI for decision testing
     auto mediumAI = ai_factory->createAI(AIDifficulty::MEDIUM);
@@ -633,7 +637,7 @@ TEST_F(TournamentAIIntegrationTest, AIIntegrationWithTournamentBattleEvents) {
     poisonedState.opponentPokemon = playerPokemon;
     poisonedState.aiTeam = &mid_gym_team;
     poisonedState.opponentTeam = &player_team;
-    poisonedState.currentWeather = WeatherCondition::CLEAR;
+    poisonedState.currentWeather = WeatherCondition::NONE;
     poisonedState.weatherTurnsRemaining = 0;
     poisonedState.turnNumber = 5;
     
@@ -704,7 +708,7 @@ TEST_F(TournamentAIIntegrationTest, TournamentAIConsistencyAcrossMultipleBattles
             state.opponentPokemon = player_team.getPokemon(0);
             state.aiTeam = opponentTeam;
             state.opponentTeam = &player_team;
-            state.currentWeather = WeatherCondition::CLEAR;
+            state.currentWeather = WeatherCondition::NONE;
             state.weatherTurnsRemaining = 0;
             state.turnNumber = 1;
             

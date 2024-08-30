@@ -30,7 +30,7 @@ protected:
         pokemon_data = std::make_shared<PokemonData>();
         team_builder = std::make_shared<TeamBuilder>(pokemon_data);
         tournament_manager = std::make_shared<TournamentManager>(pokemon_data, team_builder);
-        championship_system = std::make_shared<ChampionshipSystem>(tournament_manager, team_builder);
+        championship_system = std::make_shared<ChampionshipSystem>(pokemon_data, team_builder, tournament_manager);
         
         // Setup test player and championship teams
         setupTestPlayer();
@@ -208,11 +208,11 @@ protected:
     TeamState captureTeamState(const Team& team) {
         TeamState state;
         for (size_t i = 0; i < team.size(); ++i) {
-            Pokemon* pokemon = team.getPokemon(i);
+            const Pokemon* pokemon = team.getPokemon(i);
             if (pokemon) {
                 state.pokemon_hp.push_back(pokemon->hp);
                 state.pokemon_current_hp.push_back(pokemon->current_hp);
-                state.pokemon_status.push_back(pokemon->getStatusCondition());
+                state.pokemon_status.push_back(pokemon->status);
                 
                 std::vector<int> move_pp;
                 for (const auto& move : pokemon->moves) {
@@ -226,7 +226,7 @@ protected:
     
     void healTeamFully(Team& team) {
         for (size_t i = 0; i < team.size(); ++i) {
-            Pokemon* pokemon = team.getPokemon(i);
+            Pokemon* pokemon = const_cast<Pokemon*>(team.getPokemon(i));
             if (pokemon) {
                 pokemon->heal(pokemon->hp);
                 pokemon->clearStatusCondition();
@@ -442,7 +442,7 @@ TEST_F(ChampionshipSystemIntegrationTest, TeamStateManagementThroughChampionship
         // Apply realistic Elite Four battle damage
         pokemon1->takeDamage(40);  // Moderate damage
         pokemon2->takeDamage(20);  // Light damage
-        pokemon3->setStatusCondition(StatusCondition::PARALYSIS);  // Status effect
+        pokemon3->applyStatusCondition(StatusCondition::PARALYSIS);  // Status effect
         
         // Use some PP
         if (!pokemon1->moves.empty()) pokemon1->moves[0].current_pp -= 5;
@@ -486,7 +486,7 @@ TEST_F(ChampionshipSystemIntegrationTest, TeamStateManagementThroughChampionship
         Pokemon* pokemon1 = player_team.getPokemon(0);
         Pokemon* pokemon2 = player_team.getPokemon(1);
         
-        pokemon1->setStatusCondition(StatusCondition::BURN);  // Status effect
+        pokemon1->applyStatusCondition(StatusCondition::BURN);  // Status effect
         pokemon2->takeDamage(60);  // Heavy damage
         
         if (activeRun.allow_healing_between_battles) {

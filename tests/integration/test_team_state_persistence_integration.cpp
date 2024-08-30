@@ -167,11 +167,11 @@ protected:
     DetailedTeamState captureDetailedTeamState(const Team& team) {
         DetailedTeamState state;
         for (size_t i = 0; i < team.size(); ++i) {
-            Pokemon* pokemon = team.getPokemon(i);
+            const Pokemon* pokemon = team.getPokemon(i);
             if (pokemon) {
                 state.pokemon_hp.push_back(pokemon->hp);
                 state.pokemon_current_hp.push_back(pokemon->current_hp);
-                state.pokemon_status.push_back(pokemon->getStatusCondition());
+                state.pokemon_status.push_back(pokemon->status);
                 state.pokemon_names.push_back(pokemon->name);
                 state.pokemon_types.push_back(pokemon->types);
                 
@@ -189,10 +189,10 @@ protected:
     
     void applyDetailedTeamState(Team& team, const DetailedTeamState& state) {
         for (size_t i = 0; i < team.size() && i < state.pokemon_hp.size(); ++i) {
-            Pokemon* pokemon = team.getPokemon(i);
+            Pokemon* pokemon = const_cast<Pokemon*>(team.getPokemon(i));
             if (pokemon) {
                 pokemon->current_hp = state.pokemon_current_hp[i];
-                pokemon->setStatusCondition(state.pokemon_status[i]);
+                pokemon->applyStatusCondition(state.pokemon_status[i]);
                 
                 // Restore move PP
                 for (size_t j = 0; j < pokemon->moves.size() && j < state.pokemon_move_pp[i].size(); ++j) {
@@ -217,7 +217,7 @@ protected:
             // Moderate damage pattern
             if (team.getPokemon(0)) {
                 team.getPokemon(0)->takeDamage(40);
-                team.getPokemon(0)->setStatusCondition(StatusCondition::BURN);
+                team.getPokemon(0)->applyStatusCondition(StatusCondition::BURN);
                 if (!team.getPokemon(0)->moves.empty()) team.getPokemon(0)->moves[0].current_pp -= 4;
             }
             if (team.getPokemon(1)) {
@@ -232,12 +232,12 @@ protected:
             // Heavy damage pattern
             if (team.getPokemon(0)) {
                 team.getPokemon(0)->takeDamage(70);
-                team.getPokemon(0)->setStatusCondition(StatusCondition::PARALYSIS);
+                team.getPokemon(0)->applyStatusCondition(StatusCondition::PARALYSIS);
                 if (!team.getPokemon(0)->moves.empty()) team.getPokemon(0)->moves[0].current_pp -= 6;
             }
             if (team.getPokemon(1)) {
                 team.getPokemon(1)->takeDamage(50);
-                team.getPokemon(1)->setStatusCondition(StatusCondition::POISON);
+                team.getPokemon(1)->applyStatusCondition(StatusCondition::POISON);
                 if (team.getPokemon(1)->moves.size() > 3) team.getPokemon(1)->moves[3].current_pp -= 4;
             }
             if (team.getPokemon(2)) {
@@ -743,15 +743,15 @@ TEST_F(TeamStatePersistenceIntegrationTest, ComplexTeamStateScenariosAndEdgeCase
         
         // Apply complex status pattern
         if (complexTeam.getPokemon(0)) {
-            complexTeam.getPokemon(0)->setStatusCondition(StatusCondition::BURN);
+            complexTeam.getPokemon(0)->applyStatusCondition(StatusCondition::BURN);
             complexTeam.getPokemon(0)->takeDamage(50);
         }
         if (complexTeam.getPokemon(1)) {
-            complexTeam.getPokemon(1)->setStatusCondition(StatusCondition::POISON);
+            complexTeam.getPokemon(1)->applyStatusCondition(StatusCondition::POISON);
             complexTeam.getPokemon(1)->takeDamage(30);
         }
         if (complexTeam.getPokemon(2)) {
-            complexTeam.getPokemon(2)->setStatusCondition(StatusCondition::PARALYSIS);
+            complexTeam.getPokemon(2)->applyStatusCondition(StatusCondition::PARALYSIS);
             complexTeam.getPokemon(2)->takeDamage(20);
         }
         

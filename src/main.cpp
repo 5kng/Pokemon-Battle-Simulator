@@ -102,8 +102,6 @@ int main() {
            {"pikachu",
             {"thunderbolt", "thunder", "seismic-toss", "double-team"}},
        }},
-
-      // Missing Opponent Teams 4-8
       {"Opponent Team 4",
        {
            {"victreebel",

@@ -21,6 +21,9 @@ set(CORE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/core/battle_events.cpp
     ${CMAKE_SOURCE_DIR}/src/core/team_builder.cpp
     ${CMAKE_SOURCE_DIR}/src/core/pokemon_data.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/tournament_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/gym_leader.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/championship_system.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/type_effectiveness.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/move_type_mapping.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/input_validator.cpp
@@ -77,6 +80,10 @@ create_test(test_hard_ai            unit/test_hard_ai.cpp)
 create_test(test_expert_ai          unit/test_expert_ai.cpp)
 create_test(test_paralysis_determinism unit/test_paralysis_determinism.cpp)
 create_test(test_team_builder_phase4  unit/test_team_builder_phase4.cpp)
+create_test(test_tournament_manager unit/test_tournament_manager.cpp)
+create_test(test_gym_leader         unit/test_gym_leader.cpp)
+create_test(test_battle_events      unit/test_battle_events.cpp)
+create_test(test_championship_system unit/test_championship_system.cpp)
 
 # ────────────────────────────────
 #  Integration tests
@@ -105,6 +112,10 @@ add_custom_target(run_all_tests
         test_expert_ai
         test_paralysis_determinism
         test_team_builder_phase4
+        test_tournament_manager
+        test_gym_leader
+        test_battle_events
+        test_championship_system
         test_full_battle
         test_status_integration
         test_weather_integration

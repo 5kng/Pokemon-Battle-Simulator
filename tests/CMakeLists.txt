@@ -84,6 +84,8 @@ create_test(test_tournament_manager unit/test_tournament_manager.cpp)
 create_test(test_gym_leader         unit/test_gym_leader.cpp)
 create_test(test_battle_events      unit/test_battle_events.cpp)
 create_test(test_championship_system unit/test_championship_system.cpp)
+create_test(test_battle_regression  unit/test_battle_regression.cpp)
+create_test(test_ai_regression      unit/test_ai_regression.cpp)
 
 # ────────────────────────────────
 #  Integration tests
@@ -119,5 +121,7 @@ add_custom_target(run_all_tests
         test_full_battle
         test_status_integration
         test_weather_integration
+        test_battle_regression
+        test_ai_regression
     COMMENT "Running all tests"
 )

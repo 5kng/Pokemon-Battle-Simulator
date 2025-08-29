@@ -10,6 +10,7 @@ set(TEST_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/integration
 )
 
 set(CORE_SOURCES
@@ -44,6 +45,11 @@ add_library(test_utils utils/test_utils.cpp)
 target_include_directories(test_utils PUBLIC ${TEST_INCLUDE_DIRS})
 target_link_libraries(test_utils gtest)
 
+# Integration test utilities
+add_library(integration_test_utils integration/integration_test_utilities.cpp)
+target_include_directories(integration_test_utils PUBLIC ${TEST_INCLUDE_DIRS})
+target_link_libraries(integration_test_utils gtest test_utils)
+
 # ────────────────────────────────
 #  Helper to define each test target
 # ────────────────────────────────
@@ -51,6 +57,23 @@ function(create_test test_name test_source)
     add_executable(${test_name} ${test_source} ${CORE_SOURCES})
     target_include_directories(${test_name} PRIVATE ${TEST_INCLUDE_DIRS})
     target_link_libraries(${test_name} gtest gtest_main test_utils)
+
+    # Copy any data files the test expects
+    add_custom_command(TARGET ${test_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/data
+                $<TARGET_FILE_DIR:${test_name}>/data
+        COMMENT "Copying test data files"
+    )
+
+    gtest_discover_tests(${test_name})
+endfunction()
+
+# Helper function for integration tests (needs integration_test_utils)
+function(create_integration_test test_name test_source)
+    add_executable(${test_name} ${test_source} ${CORE_SOURCES})
+    target_include_directories(${test_name} PRIVATE ${TEST_INCLUDE_DIRS})
+    target_link_libraries(${test_name} gtest gtest_main test_utils integration_test_utils)
 
     # Copy any data files the test expects
     add_custom_command(TARGET ${test_name} POST_BUILD
@@ -97,6 +120,14 @@ create_test(test_status_integration integration/test_status_integration.cpp)
 create_test(test_weather_integration integration/test_weather_integration.cpp)
 
 # ────────────────────────────────
+#  Phase 3 Multi-System Integration tests
+# ────────────────────────────────
+create_integration_test(test_tournament_battle_integration integration/test_tournament_battle_integration.cpp)
+create_integration_test(test_tournament_ai_integration integration/test_tournament_ai_integration.cpp)
+create_integration_test(test_championship_system_integration integration/test_championship_system_integration.cpp)
+create_integration_test(test_team_state_persistence_integration integration/test_team_state_persistence_integration.cpp)
+
+# ────────────────────────────────
 #  Convenience aggregate target
 # ────────────────────────────────
 add_custom_target(run_all_tests
@@ -123,9 +154,26 @@ add_custom_target(run_all_tests
         test_full_battle
         test_status_integration
         test_weather_integration
+        test_tournament_battle_integration
+        test_tournament_ai_integration
+        test_championship_system_integration
+        test_team_state_persistence_integration
         test_battle_regression
         test_ai_regression
         test_data_regression
         test_performance_regression
     COMMENT "Running all tests"
+)
+
+# ────────────────────────────────
+#  Phase 3 Integration Test Target
+# ────────────────────────────────
+add_custom_target(run_phase3_integration_tests
+    COMMAND ${CMAKE_CTEST_COMMAND} --verbose -R "test_tournament_.*_integration|test_championship_.*_integration|test_team_state_.*_integration"
+    DEPENDS
+        test_tournament_battle_integration
+        test_tournament_ai_integration
+        test_championship_system_integration
+        test_team_state_persistence_integration
+    COMMENT "Running Phase 3 Multi-System Integration Tests"
 )

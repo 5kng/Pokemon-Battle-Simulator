@@ -78,6 +78,15 @@ create_test(test_expert_ai          unit/test_expert_ai.cpp)
 create_test(test_paralysis_determinism unit/test_paralysis_determinism.cpp)
 create_test(test_team_builder_phase4  unit/test_team_builder_phase4.cpp)
 
+# New comprehensive unit tests
+create_test(test_pokemon_data         unit/test_pokemon_data.cpp)
+create_test(test_ai_factory           unit/test_ai_factory.cpp)
+create_test(test_ai_strategy          unit/test_ai_strategy.cpp)
+create_test(test_move_type_mapping    unit/test_move_type_mapping.cpp)
+create_test(test_health_bar_animator  unit/test_health_bar_animator.cpp)
+create_test(test_health_bar_event_listener unit/test_health_bar_event_listener.cpp)
+create_test(test_team_builder         unit/test_team_builder.cpp)
+
 # ────────────────────────────────
 #  Integration tests
 # ────────────────────────────────
@@ -105,6 +114,13 @@ add_custom_target(run_all_tests
         test_expert_ai
         test_paralysis_determinism
         test_team_builder_phase4
+        test_pokemon_data
+        test_ai_factory
+        test_ai_strategy
+        test_move_type_mapping
+        test_health_bar_animator
+        test_health_bar_event_listener
+        test_team_builder
         test_full_battle
         test_status_integration
         test_weather_integration
